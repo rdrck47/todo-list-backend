@@ -1,0 +1,233 @@
+openapi: 3.0.2
+info:
+  title: To Do List
+  description: "A to-do list application"
+  contact:
+    email: rodrigo.rodriguez@encora.com
+  version: 0.0.1-SNAPSHOT
+servers:
+  - url: https://localhost:9090
+tags:
+  - name: to-do
+    description: Operations about to-do tasks
+paths:
+  /todos:
+    get:
+      tags:
+        - todo
+      summary: Get to-do list by page
+      operationId: getToDoByPage
+      parameters:
+        - name: pageNumber
+          in: query
+          description: 'The number of the required page of the to-do list'
+          required: true
+          schema:
+            type: integer
+        - name: sortByPriority
+          in: query
+          description: 'Flag to enable sorting of the to-do list by priority'
+          required: false
+          schema:
+            type: boolean
+        - name: sortByDueDate
+          in: query
+          description: 'Flag to enable sorting of the to-do list by due date'
+          required: false
+          schema:
+            type: boolean
+        - name: filterByDone
+          in: query
+          description: 'Parameter to enable filtering of the to-do list based on the completion status of the task (done/undone)'
+          required: false
+          schema:
+            type: string
+            enum: [ Done,Undone ]
+        - name: filterByName
+          in: query
+          description: 'Parameter that allows filtering of the to-do list by the name or part of the name'
+          required: false
+          schema:
+            type: string
+        - name: filterByPriority
+          in: query
+          description: 'Parameter to enable filtering of the to-do list based on the priority of the task'
+          required: false
+          schema:
+            type: string
+            enum: [ High,Medium,Low ]
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ToDo'
+        404:
+          description: To-do not found
+    post:
+      tags:
+        - todo
+      summary: Create to-do task
+      description: Create to-do functionality
+      operationId: createToDo
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ToDoTemplate'
+      responses:
+        201:
+          description: Created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+        400:
+          description: Invalid to-do provided. Complete all the fields.
+          content:
+            application/json:
+              schema:
+                type: object
+      x-codegen-request-body-name: body
+  /todos/{id}:
+    put:
+      tags:
+        - todo
+      summary: Update a to-do by ID
+      operationId: updateToDoById
+      parameters:
+        - name: id
+          in: path
+          schema:
+            type: integer
+            format: int64
+          required: true
+          description: Numeric ID of the to-do to update
+        - name: name
+          in: query
+          schema:
+            type: string
+          description: The name that describes the to-do
+        - name: dueDate
+          in: query
+          schema:
+            type: string
+          description: Due date for the to-do
+        - name: priority
+          in: query
+          schema:
+            type: string
+            enum: [ High,Medium,Low ]
+          description: Priority of the to-do
+      responses:
+        200:
+          description: To-do was updated successfully.
+        400:
+          description: Invalid to-do provided. Complete or verify all the fields.
+        404:
+          description: To-do not found.
+    delete:
+      tags:
+        - todo
+      summary: Delete a to-do by ID
+      operationId: deleteToDoById
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+            format: int64
+          required: true
+          description: Numeric ID of the to-do to delete
+      responses:
+        204:
+          description: The to-do was deleted successfully.
+        404:
+          description: To-do not found.
+  /todos/{id}/done:
+    put:
+      tags:
+        - todo
+      summary: Update the status of a to-do to done by ID
+      operationId: setToDoAsDone
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+            format: int64
+          required: true
+          description: Numeric ID of the to-do to update
+      responses:
+        200:
+          description: To-do status was set to done successfully
+        404:
+          description: To-do not found.
+  /todos/{id}/undone:
+    put:
+      tags:
+        - todo
+      summary: Update the status of a to-do to undone by ID
+      operationId: setToDoAsUndone
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+            format: int64
+          required: true
+          description: Numeric ID of the to-do to update
+      responses:
+        200:
+          description: To-do status was set to undone successfully
+        404:
+          description: To-do not found.
+
+
+
+components:
+  schemas:
+    ToDo:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        dueDate:
+          type: date
+        done:
+          type: boolean
+          default: false
+        doneDate:
+          type: date
+        priority:
+          type: string
+          enum: [High,Medium,Low]
+        creationDate:
+          type: date
+      required:
+        - name
+        - priority
+    ToDoTemplate:
+      type: object
+      properties:
+        name:
+          type: string
+        dueDate:
+          type: date
+        priority:
+          type: string
+          enum: [ High,Medium,Low ]
+      required:
+        - name
+        - priority
+    ToDoValidationError:
+      type: object
+      properties:
+        errorMessage:
+          type: string
